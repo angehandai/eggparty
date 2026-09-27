@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Party Rush · Floating Candy Factory</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <div id="menu" class="screen">
+    <div class="brand"><div class="brand-dot"></div><div><div class="eyebrow">FLOATING CANDY FACTORY</div><h1>PARTY RUSH</h1></div></div>
+    <p class="tagline">跑过糖果工厂，别掉下去！</p>
+    <button id="playBtn" class="primary">PLAY</button>
+    <button id="settingsBtn" class="secondary">SETTINGS</button>
+    <div class="menu-tip">WASD 移动 · SPACE 跳跃 · SHIFT 冲刺 · 鼠标控制视角</div>
+  </div>
+  <div id="settings" class="modal hidden"><div class="modal-card"><h2>SETTINGS</h2><label>画面质量 <select id="quality"><option>High</option><option>Low</option></select></label><label>音效 <input id="sound" type="checkbox" checked></label><button id="closeSettings" class="primary">DONE</button></div></div>
+  <div id="hud" class="hidden">
+    <div class="hud-top"><div class="pill"><span class="dot green"></span>Players Left: <b id="playersLeft">12</b></div><div class="checkpoint">CHECKPOINT <b id="cpText">0/4</b></div></div>
+    <div class="progress"><div id="progressFill"></div><span id="progressLabel">START</span></div>
+    <div id="countdown" class="countdown hidden">3</div>
+    <div class="controls"><b>WASD</b> Move&nbsp;&nbsp; <b>SPACE</b> Jump&nbsp;&nbsp; <b>SHIFT</b> Dash</div>
+    <div id="toast" class="toast hidden"></div>
+  </div>
+  <div id="result" class="screen hidden"><div class="result-card"><div class="eyebrow">RACE COMPLETE!</div><h2 id="resultTitle">YOU FINISHED!</h2><div id="resultsList" class="results"></div><button id="againBtn" class="primary">PLAY AGAIN</button><button id="menuBtn" class="secondary">MAIN MENU</button></div></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/three@0.128.0/build/three.min.js'"></script>
+  <script src="game.js?v=20260928-3"></script>
+</body>
+</html>
