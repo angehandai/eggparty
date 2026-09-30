@@ -1,0 +1,31 @@
+{
+  "scope": "CPU scene/controller integration. WebGL renderer and Canvas2D drawing stubbed; no visual/GPU certification.",
+  "checks": [
+    "English-only game-facing source",
+    "12 visible mesh-bound racers",
+    "8 original obstacles",
+    "finite model and instance geometry",
+    "W/S for 2 seconds",
+    "A/D screen direction",
+    "camera-relative W at 90 degrees",
+    "Space gravity/jump",
+    "Shift speed",
+    "player inside 16:9, 16:10 and 4:3 camera frustums",
+    "two-bar cross windmills with diagonal gap, hit-release behavior, and increasing speeds",
+    "103-second race and results",
+    "restart",
+    "Low quality",
+    "automatic quality reduction with 30 FPS input; 60 FPS and hidden tabs retained",
+    "checkpoint and finish celebration integration; finished model remains visible",
+    "instanced buffer disposal on restart"
+  ],
+  "initialScene": {
+    "meshes": 880,
+    "vertices": 274635
+  },
+  "finalScene": {
+    "meshes": 880,
+    "vertices": 274635
+  },
+  "errors": []
+}

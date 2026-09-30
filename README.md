@@ -1,34 +1,69 @@
-# Party Rush · Floating Candy Factory
+# Party Rush · 云朵薄荷工厂
 
-一个无需安装游戏引擎的原创派对闯关 Demo。项目使用原生 HTML5 Canvas + JavaScript 绘制，所有角色、地图、UI 和视觉元素均为程序生成。
+在现有 Three.js 派对闯关 Demo 上加入原创卡通美术系统。角色、装饰、材质纹理、UI 和音效由代码生成；Three.js 使用 MIT 许可的 r128 本地副本。没有使用第三方游戏的角色、Logo 或地图资产。
 
 ## 运行
 
-直接双击 `index.html`，或在项目目录启动任意静态文件服务器后访问该文件：
-
 ```powershell
-python -m http.server 8000
+node serve.mjs
 ```
 
-然后打开 `http://localhost:8000/`。
+打开 <http://127.0.0.1:8000/>。如果服务器已经运行，刷新页面即可。无需联网加载 CDN。不要直接双击 HTML。
 
-## 已实现
+## 发布到公开网站
 
-- PARTY RUSH 主菜单、设置弹窗、PLAY / PLAY AGAIN / MAIN MENU
-- 第三人称视角风格的彩色 3D 透视赛道（Floating Candy Factory）
-- WASD 移动、Space 跳跃、Shift 冲刺输入
-- 12 名参赛者（1 名玩家 + 11 名能力不同的 AI）
-- 旋转棒、移动平台、摆锤、弹跳平台、旋转风车、消失平台
-- 检查点 1–4、掉落复活、连续掉落三次淘汰
-- 玩家与 AI 的碰撞/击退、随机失误、到达终点和排名
-- HUD：Players Left、Checkpoint、进度条和控制提示
-- 结果界面、名次、用时和重新开始
-- 纯 CSS / Canvas 的粒子、彩色材质、云层、终点标志和反馈动画
+项目包含 `.github/workflows/deploy-pages.yml`。将项目推送到 GitHub 仓库后，在仓库的 **Settings → Pages** 中将来源设为 **GitHub Actions**；之后每次推送到 `master` 或 `main` 都会自动发布到 `https://<用户名>.github.io/<仓库名>/`。
+
+## 操作与原有玩法
+
+- WASD：相对镜头方向移动；A 向画面左侧、D 向右侧。
+- Space 跳跃；Shift 冲刺；按住鼠标左键拖动调整镜头。
+- 保留 12 名选手、AI、碰撞和击退、四个检查点、掉落复活与淘汰、排名、结果页及重开。
+
+## 视觉系统
+
+- 原创工厂小精灵：圆润身体、双色脸、眼睛和眨眼、小嘴、叶状耳朵、手套、鞋底、背包。使用节点动画表现待机、跑步、跳跃、落地压缩、受击、掉落与冲线庆祝。
+- 材质：柔软橡胶、糖果塑料、金属、半透明果冻与布料，使用 MeshPhysicalMaterial，区分粗糙度、金属度、清漆和环境反射。将调色板从 sRGB 转入线性空间，避免中间色过亮。
+- 灯光：ACES、exposure 0.88、暖色主光、半球环境光、粉色轮廓光与蓝色补光；主光阴影随玩家移动，使用 PCFSoftShadowMap。受击与终点触发短暂点光反馈。
+- 角色接触阴影采用渐变贴图，属于接触 AO 近似，不是 SSAO。发光点缀使用 emissive 和光晕粒子，没有整屏 Bloom 后处理。
+- 场景：渐变天空、组合云团、浮动岛屿、工厂建筑、烟囱、管道、糖果树、气球和彩旗。装饰与 Gameplay 碰撞数据分离。
+- 障碍：糖果旋转机械、十字双扇叶风车（沿赛道逐个加速）、带框架的软糖锤、果冻弹簧、标线移动平台、闪烁跳台。起终点加入门架、招牌和棋盘格；首位冲线时短暂显示庆祝横幅。
+- 粒子：脚步尘雾、跳跃/落地、冲刺、受击、检查点、弹跳、淘汰与终点彩纸。环境浮尘和动态粒子数量受限。
+- 镜头：常规后距 6.8 units、基础高度 3.9 加俯仰偏移；指数平滑跟随，前看 2.6 units。开场从远处拉近，冲刺 FOV 60→70，碰撞收近、受击震动和跳跃/掉落跟随。
+- UI：主菜单、设置、HUD、倒计时、进度条和结果页重新布局；加入安全边距、窄窗与矮窗规则。
+
+## 性能
+
+静态重复装饰与赛道细节使用 InstancedMesh，公共几何体和材质复用。重开释放独立材质、纹理、几何体和实例缓冲。
+
+High：像素倍率上限 1.5、2048 阴影、最多 200 个动态特效对象。
+Low：像素倍率 1、1024 阴影、最多 70 个动态特效对象、关闭环境浮尘。
+
+240 个有效比赛帧平均帧率低于约 42 FPS 时自动切到 Low；后台标签页和超过 250 ms 的暂停不纳入判断。设置菜单可手动切换。1080p / 60 FPS 是目标，尚未完成真实 GPU 测量。
+
+## 验证
+
+```powershell
+node --check game.js
+node --check visuals.js
+node tools/validate-scene.cjs
+```
+
+回归脚本使用真实 Three.js 场景、几何体、变换和控制逻辑，在 Node 中替代 WebGLRenderer、Canvas2D 和 DOM。覆盖 WASD、相机相对移动、跳跃/冲刺、完整比赛、重开、画质降级、实例缓冲释放，以及三种宽高比下角色中心位于镜头范围内。
+
+结果写入 `validation/scene-regression.json`。该检查不能代替浏览器布局、shader、截图或 GPU 性能验收；`errors: []` 只代表此测试环境未捕获错误。详见 `validation/visual-overhaul.md`。
+
+## 本轮边界
+
+可行走地面高度、碰撞、AI 路径与障碍触发范围保持原结构。侧方升高的传送带、浮岛属于装饰；尚未加入可行走坡道、转弯和分岔。未加入屏幕空间 AO、全屏 Bloom 或景深后处理，远景层次来自雾、色彩和场景布置。
+
+本轮浏览器自动化因无法可靠确认 Windows 浏览器 URL 而中止，因此没有完成实机截图验收，也不能确认真实浏览器 Console 无错误或商业成品级视觉标准已经达成。
 
 ## 文件
 
-- `index.html`：页面结构、菜单、HUD 和结果界面
-- `styles.css`：卡通 UI 样式与布局
-- `game.js`：渲染、输入、玩家、AI、障碍、检查点、竞赛和粒子逻辑
-
-这是一个可直接运行的 playable-first 原型；音频、真正网络联机、骨骼动画和 Unity/URP 资产属于后续生产阶段。
+- `game.js`：原有比赛与控制逻辑、视觉事件接入和镜头。
+- `visuals.js`：模型、材质、环境、动画、特效、画质和资源管理。
+- `index.html` / `styles.css`：菜单、HUD 与结果界面。
+- `vendor/three.min.js` / `vendor/THREE-LICENSE.txt`：本地引擎与许可证。
+- `serve.mjs`：零依赖本地静态服务器。
+- `tools/validate-scene.cjs`：CPU 集成回归检查。
