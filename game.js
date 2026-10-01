@@ -42,20 +42,24 @@
 
   const V = window.PartyVisuals;
   V.init(scene,renderer,camera,sun);
+  const showdown=window.FinalShowdown;
+  showdown.init(scene);
   const colors = [0xff668f,0x55c8ed,0xffc85a,0x9b87f5,0x61d69f,0xff965c,0xf07ad1,0x68a8ff,0xc2dc5c,0xef7e62,0x50d4c3,0xc18aff];
   const botNames = ['Mochi','Sprinkle','Bubbles','Pip','Jelly','Noodle','Taffy','Peach','Waffle','Fizz','Pudding'];
   const keys = {};
-  addEventListener('keydown', e => { if (['KeyW','KeyA','KeyS','KeyD','Space','ShiftLeft','ShiftRight'].includes(e.code)) { e.preventDefault(); keys[e.code] = true; } }, { passive:false });
+  addEventListener('keydown', e => { if (['KeyW','KeyA','KeyS','KeyD','Space','ShiftLeft','ShiftRight','KeyE','ArrowLeft','ArrowRight'].includes(e.code)) { e.preventDefault(); keys[e.code] = true; window.__showdownKeys=keys; } }, { passive:false });
   addEventListener('keyup', e => { keys[e.code] = false; });
+  window.__showdownKeys=keys;
+  addEventListener('keydown',e=>{if(e.code==='ArrowLeft'&&gameMode==='showdown'&&player?.eliminated)showdown.cycleSpectator(-1);if(e.code==='ArrowRight'&&gameMode==='showdown'&&player?.eliminated)showdown.cycleSpectator(1);});
 
-  let state = 'menu', yaw = 0, pitch = .18, dragging = false, lastX = 0, lastY = 0;
+  let state = 'menu', gameMode='race', yaw = 0, pitch = .18, dragging = false, lastX = 0, lastY = 0;
   let elapsed = 0, shake = 0, fovTarget = 60, countdownTimer = null, toastTimer = null;
   const audio = { ctx:null, enabled:true, ensure(){ if(!this.enabled) return null; if(!this.ctx) { const C=window.AudioContext||window.webkitAudioContext; if(C) this.ctx=new C(); } if(this.ctx?.state==='suspended') this.ctx.resume(); return this.ctx; }, beep(freq,duration=.08,type='sine',gain=.035){ const c=this.ensure(); if(!c) return; const o=c.createOscillator(), g=c.createGain(); o.type=type; o.frequency.value=freq; g.gain.setValueAtTime(gain,c.currentTime); g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+duration); o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime+duration); } };
   canvas.tabIndex = 0;
   canvas.addEventListener('pointerdown', e => { canvas.focus(); dragging = true; lastX = e.clientX; lastY = e.clientY; });
   addEventListener('pointerup', () => dragging = false);
   addEventListener('pointermove', e => {
-    if (!dragging || state !== 'race') return;
+    if (!dragging || (state !== 'race' && state !== 'showdown')) return;
     yaw -= (e.clientX - lastX) * .006;
     pitch = THREE.MathUtils.clamp(pitch + (e.clientY - lastY) * .004, -.08, .65);
     lastX = e.clientX; lastY = e.clientY;
@@ -131,14 +135,22 @@
     updateHUD();
   }
   function startRace() {
+    gameMode='race';
+    if(showdown.active) showdown.end();
     if(countdownTimer) clearInterval(countdownTimer);
     resetRace(); V.start(); state='countdown'; menu.classList.add('hidden'); result.classList.add('hidden'); hud.classList.remove('hidden');
     const cd=$('countdown'); cd.classList.remove('hidden'); let n=3; cd.textContent='3';
     audio.beep(440,.12,'triangle');
     countdownTimer=setInterval(()=>{ n--; if(n>0) { cd.textContent=String(n);cd.style.animation='none';void cd.offsetWidth;cd.style.animation=''; audio.beep(440+n*80,.1,'triangle'); } else if(n===0) { cd.textContent='GO!'; cd.dataset.beat=String(n);V.go(player.group.position); state='race'; toast('RACE ON!'); audio.beep(880,.18,'square'); } else { clearInterval(countdownTimer); countdownTimer=null; cd.classList.add('hidden'); } },1000);
   }
-  $('playBtn').onclick=startRace; $('againBtn').onclick=startRace;
-  $('menuBtn').onclick=()=>{ if(countdownTimer) { clearInterval(countdownTimer); countdownTimer=null; } state='menu'; result.classList.add('hidden'); menu.classList.remove('hidden'); hud.classList.add('hidden'); };
+  function startShowdown(){
+    if(countdownTimer) clearInterval(countdownTimer);
+    if(showdown.active) showdown.end();
+    gameMode='showdown';state='showdown';yaw=0;pitch=.18;menu.classList.add('hidden');result.classList.add('hidden');hud.classList.remove('hidden');
+    world.visible=false;decor.visible=false;showdown.begin();player=showdown.player;updateCamera(.016);
+  }
+  $('playBtn').onclick=startRace; $('showdownBtn').onclick=startShowdown; $('againBtn').onclick=()=>gameMode==='showdown'?startShowdown():startRace;
+  $('menuBtn').onclick=()=>{ if(countdownTimer) { clearInterval(countdownTimer); countdownTimer=null; } if(gameMode==='showdown')showdown.end();state='menu'; result.classList.add('hidden'); menu.classList.remove('hidden'); hud.classList.add('hidden'); world.visible=true;decor.visible=true; };
   $('settingsBtn').onclick=()=>settings.classList.remove('hidden'); $('closeSettings').onclick=()=>settings.classList.add('hidden');
   $('quality').onchange=e=>V.quality(e.target.value);
   $('sound').onchange=e=>{ audio.enabled=e.target.checked; if(audio.enabled) audio.beep(660,.08); };
@@ -278,6 +290,7 @@
 
   function updateHUD() {
     if(!player) return;
+    if(gameMode==='showdown') return;
     $('playersLeft').textContent=racers.filter(e=>!e.finished&&!e.eliminated).length;
     $('cpText').textContent=player.cp+'/4'; $('progressFill').style.width=Math.min(100,Math.max(0,player.z/COURSE_END*100))+'%';
     $('progressLabel').textContent=player.finished?'FINISH':(player.eliminated?'SPECTATING':player.cp?'CHECKPOINT '+player.cp:'START');
@@ -291,8 +304,8 @@
   const cameraRay=new THREE.Raycaster();
   function updateCamera(dt) {
     if(!player)return;
-    let focus=player;if(player.eliminated)focus=racers.find(e=>!e.eliminated&&!e.finished)||player;
-    const offset=V.cameraOffset(),forward=new THREE.Vector3(-Math.sin(yaw),0,Math.cos(yaw));
+    let focus=player;if(player.eliminated)focus=gameMode==='showdown'?(showdown.focus||player):(racers.find(e=>!e.eliminated&&!e.finished)||player);
+    window.__showdownYaw=yaw;const offset=V.cameraOffset(),forward=new THREE.Vector3(-Math.sin(yaw),0,Math.cos(yaw));
     const target=new THREE.Vector3(focus.x,1.2+focus.y*.7,focus.z).addScaledVector(forward,2.6);
     const behind=new THREE.Vector3(focus.x,offset.height+focus.y*.65+pitch*2.8,focus.z).addScaledVector(forward,-offset.distance);
     if(state==='menu'){behind.set(-3.8,3.3,-5.8);target.set(3.1,1.35,4);}
@@ -304,7 +317,7 @@
     if(hits.length&&hits[0].distance<distance)behind.copy(anchor).addScaledVector(direction,Math.max(1.1,hits[0].distance-.35));
     camera.position.lerp(behind,1-Math.exp(-dt*9));camera.lookAt(target);
     if(shake>0){camera.position.x+=(Math.random()-.5)*shake*.6;camera.position.y+=(Math.random()-.5)*shake*.4;shake=Math.max(0,shake-dt);}
-    const fov=state==='menu'?52:fovTarget-offset.kick*3;
+    const fov=state==='menu'?52:(gameMode==='showdown'&&showdown.actors.filter(a=>!a.eliminated).length<=2?56:fovTarget-offset.kick*3);
     camera.fov+=(fov-camera.fov)*Math.min(1,dt*8);camera.updateProjectionMatrix();
   }
 
@@ -317,7 +330,12 @@
     const list=$('resultsList'); list.innerHTML=''; order.forEach((e,i)=> { const placeText=i<3?['🥇','🥈','🥉'][i]:String(i+1); const time=e.finished?(Math.floor(e.finishTime)+'.'+String(Math.floor(e.finishTime*10)%10)+'s'):(e.eliminated?'OUT':'DNF'); list.innerHTML+=`<div class="row ${e===player?'you':''}"><span class="rank">${placeText}</span><span class="avatar" style="background:#${e.color.toString(16).padStart(6,'0')}"></span><span class="name">${e.name}</span><span class="time">${time}</span></div>`; });
     result.classList.remove('hidden');
   }
+  function finishShowdown(){
+    if(state==='result')return;state='result';hud.classList.add('hidden');const roster=showdown.actors,winner=roster.find(a=>!a.eliminated);$('resultTitle').textContent=winner===showdown.player?'CHAMPION · YOU WIN!':'CHAMPION · '+(winner?.name||'UNKNOWN');const list=$('resultsList');list.innerHTML='';[...roster].sort((a,b)=>Number(a.eliminated)-Number(b.eliminated)).forEach((a,i)=>{list.innerHTML+=`<div class="row ${a===showdown.player?'you':''}"><span class="rank">${a===winner?'🏆':String(i+1)}</span><span class="avatar" style="background:#${a.color.toString(16).padStart(6,'0')}"></span><span class="name">${a.name}</span><span class="time">${a===winner?'CHAMPION':'OUT'}</span></div>`;});result.classList.remove('hidden');}
   function update(dt) {
+    if(state==='showdown'){
+      showdown.update(dt);player=showdown.player;updateCamera(dt);if(showdown.state==='result')finishShowdown();return;
+    }
     elapsed+=dt; updateObstacles(dt);
     if(state==='race') { movePlayer(dt); racers.slice(1).forEach(b=>moveBot(b,dt)); racers.forEach(e=>applyGroundAndBounds(e,dt)); racers.forEach(e=>collisionAndCourse(e,dt)); racers.forEach(e=>syncRacer(e,dt));
       if(racers.filter(e=>e.finished||e.eliminated).length>=racers.length || elapsed>100) finishRace();

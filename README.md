@@ -62,8 +62,15 @@ node tools/validate-scene.cjs
 ## 文件
 
 - `game.js`：原有比赛与控制逻辑、视觉事件接入和镜头。
+- `showdown.js`：FINAL SHOWDOWN 独立竞技场、战斗、技能、道具、AI、缩圈、坍塌、淘汰、观战和冠军流程。
 - `visuals.js`：模型、材质、环境、动画、特效、画质和资源管理。
 - `index.html` / `styles.css`：菜单、HUD 与结果界面。
 - `vendor/three.min.js` / `vendor/THREE-LICENSE.txt`：本地引擎与许可证。
 - `serve.mjs`：零依赖本地静态服务器。
 - `tools/validate-scene.cjs`：CPU 集成回归检查。
+
+## FINAL SHOWDOWN
+
+主菜单的 `FINAL SHOWDOWN` 会进入原创 Floating Sky Arena。12 名角色同时出生，使用 WASD、Space、Shift 和 E；每名角色随机获得 Energy Bomb、Lightning Zone、Ice Blast、Shield 或 Giant Mode 之一。竞技场有中央平台、8 个外围平台、跳跃空隙、发光能量核心、云层和浮空装饰。
+
+外围平台会先震动、倾斜并下沉，随后消失；安全区域从完整竞技场逐步缩到中央区域。场内最多 8 个道具会在 10–15 秒后重生。AI 分为 Aggressive、Defensive、Balanced，会追击、移动、拾取和释放技能。玩家淘汰后可用左右方向键切换观战目标；剩余 3 人进入 FINAL 3，剩余 2 人进入 FINAL DUEL，最后存活者进入 CHAMPION 结果页。

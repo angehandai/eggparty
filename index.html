@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Party Rush · Floating Candy Factory</title>
-  <link rel="stylesheet" href="styles.css?v=cloudmint-1" />
+  <link rel="stylesheet" href="styles.css?v=cloudmint-2" />
 </head>
 <body>
   <canvas id="game"></canvas>
@@ -16,6 +16,7 @@
       <p class="tagline">A cloud race through a candy factory.<br><span>Jump in and sprint to the joy.</span></p>
       <div class="race-info"><span>12 RACERS</span><i></i><span>4 CHECKPOINTS</span><i></i><span>1 CHAMPION</span></div>
       <button id="playBtn" class="primary">START RACE <span>PLAY →</span></button>
+      <button id="showdownBtn" class="showdown-button">⚡ FINAL SHOWDOWN <span>LAST ONE STANDING</span></button>
       <button id="settingsBtn" class="secondary">⚙ SETTINGS</button>
     </div>
     <div class="menu-tip">WASD MOVE　 ·　 SPACE JUMP　 ·　 SHIFT DASH</div>
@@ -23,10 +24,11 @@
   </div>
   <div id="settings" class="modal hidden"><div class="modal-card"><h2>SETTINGS</h2><label>VIDEO QUALITY <select id="quality"><option>High</option><option>Low</option></select></label><label>SOUND <input id="sound" type="checkbox" checked></label><button id="closeSettings" class="primary">DONE</button></div></div>
   <div id="hud" class="hidden">
-    <div class="hud-top"><div class="pill player-count"><span class="ui-icon">👥</span><span><small>PLAYERS LEFT</small><b id="playersLeft">12</b></span></div><div class="checkpoint"><small>CHECKPOINT</small><b id="cpText">0/4</b></div></div>
-    <div class="progress-wrap"><div class="progress-caption"><span>CLOUD SPRINT</span><span id="progressLabel">START</span><span>✦ FINISH</span></div><div class="progress"><div id="progressFill"></div></div></div>
+    <div class="hud-top"><div class="pill player-count"><span class="ui-icon">👥</span><span><small id="aliveLabel">PLAYERS LEFT</small><b id="playersLeft">12</b></span></div><div class="checkpoint"><small id="cpLabel">CHECKPOINT</small><b id="cpText">0/4</b></div></div>
+    <div id="progressWrap" class="progress-wrap"><div class="progress-caption"><span>CLOUD SPRINT</span><span id="progressLabel">START</span><span>✦ FINISH</span></div><div class="progress"><div id="progressFill"></div></div></div>
     <div id="countdown" class="countdown hidden">3</div>
     <div class="controls"><span><b>WASD</b> MOVE</span><span><b>SPACE</b> JUMP</span><span><b>SHIFT</b> DASH</span><span class="mouse-tip">DRAG TO LOOK</span></div>
+    <div id="showdownHud" class="showdown-hud hidden"><div class="showdown-title">⚡ FINAL SHOWDOWN <span id="showdownPhase">DROP IN</span></div><div class="showdown-timer" id="showdownTimer">05:00</div><div class="showdown-warning hidden" id="showdownWarning">DANGER ZONE · MOVE TO CENTER</div><div class="showdown-ability"><small>ABILITY · <span id="abilityName">READY</span></small><b id="abilityIcon">⚡</b><strong id="abilityStatus">READY</strong><em>PRESS E</em></div><div class="showdown-target" id="showdownTarget">TARGET: NONE</div></div>
     <div class="course-badge"><small>CLOUDMINT WORKS</small><strong>01 <span>/ CLOUDMINT FACTORY</span></strong></div>
     <div id="toast" class="toast hidden"></div>
     <div id="celebration" class="celebration"><div><span>✦ FIRST FINISHER ✦</span><strong></strong></div></div>
@@ -34,7 +36,8 @@
   </div>
   <div id="result" class="screen hidden"><div class="result-card"><div class="eyebrow">RACE COMPLETE!</div><h2 id="resultTitle">YOU FINISHED!</h2><div id="resultsList" class="results"></div><button id="againBtn" class="primary">PLAY AGAIN</button><button id="menuBtn" class="secondary">MAIN MENU</button></div></div>
   <script src="vendor/three.min.js"></script>
-  <script src="visuals.js?v=cloudmint-1"></script>
-  <script src="game.js?v=cloudmint-1"></script>
+  <script src="visuals.js?v=cloudmint-2"></script>
+  <script src="showdown.js?v=showdown-2"></script>
+  <script src="game.js?v=cloudmint-2"></script>
 </body>
 </html>
